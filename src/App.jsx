@@ -8,6 +8,7 @@ export default function App() {
   
   const [formData, setFormData] = useState({ title: '', tags: '', content: '' });
   const [copied, setCopied] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (activePromptId) {
@@ -16,6 +17,11 @@ export default function App() {
     } else {
       setFormData({ title: '', tags: '', content: '' });
     }
+    
+    // Auto-fechar a sidebar no mobile ao selecionar um prompt
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
   }, [activePromptId, prompts]);
 
   const handleSave = (e) => {
@@ -23,9 +29,6 @@ export default function App() {
     if (!formData.title || !formData.content) return;
     savePrompt(formData);
     if (!formData.id) {
-      // If it's a new prompt, we let the hook assign the ID.
-      // To immediately select it, we could return the new ID from savePrompt,
-      // but for simplicity, we clear the form to add another.
       setFormData({ title: '', tags: '', content: '' });
     }
   };
@@ -50,15 +53,38 @@ export default function App() {
   );
 
   return (
-    <div className="flex min-h-screen bg-vantablack">
+    <div className="flex min-h-screen bg-vantablack overflow-hidden relative">
+      
+      {/* Overlay Escuro para Mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[350px] bg-vantablack border-r border-gold-dim flex flex-col h-screen sticky top-0 overflow-hidden">
-        <div className="p-6 border-b border-gold-dim">
-          <h1 className="text-gold-muted uppercase tracking-executiveWide font-light text-xl mb-6">
+      <aside 
+        className={`w-[85vw] sm:w-[350px] bg-vantablack border-r border-gold-dim flex flex-col h-screen fixed top-0 left-0 z-50 transform transition-transform duration-500 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-[0_0_50px_rgba(0,0,0,1)]' : '-translate-x-full'}`}
+      >
+        <div className="p-6 border-b border-gold-dim flex justify-between items-center">
+          <h1 className="text-gold-muted uppercase tracking-executiveWide font-light text-xl">
             Córtex Central
           </h1>
           <button 
-            onClick={() => setActivePromptId(null)}
+            className="md:hidden text-gold-muted hover:text-gold-bright p-2 -mr-2"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            ✕
+          </button>
+        </div>
+        
+        <div className="p-6 pb-2">
+          <button 
+            onClick={() => {
+              setActivePromptId(null);
+              if (window.innerWidth < 768) setIsSidebarOpen(false);
+            }}
             className="btn-gold w-full mb-6"
           >
             [ + Novo Prompt ]
@@ -76,7 +102,7 @@ export default function App() {
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 pt-2">
           {filteredPrompts.length === 0 ? (
             <p className="text-gray-500 text-xs uppercase tracking-executive">Nenhum registro encontrado.</p>
           ) : (
@@ -97,27 +123,43 @@ export default function App() {
       </aside>
 
       {/* Editor Central */}
-      <main className="flex-1 bg-[#050505] p-12 flex flex-col h-screen overflow-y-auto">
+      <main className="flex-1 bg-[#050505] p-6 md:p-12 flex flex-col h-screen overflow-y-auto w-full">
         <div className="max-w-4xl w-full mx-auto flex-1 flex flex-col">
-          <header className="flex justify-between items-end border-b border-gold-dim pb-4 mb-8">
-            <h2 className="text-gold-muted text-2xl uppercase tracking-executiveWide font-light">
+          
+          {/* Header Mobile com Hamburguer Menu */}
+          <div className="md:hidden flex items-center mb-8 gap-4 border-b border-gold-dim pb-4">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="text-gold-muted hover:text-gold-bright transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+            <h2 className="text-gold-muted text-lg uppercase tracking-executiveWide font-light">
+              Córtex Central
+            </h2>
+          </div>
+
+          <header className="flex flex-col sm:flex-row justify-between sm:items-end border-b border-gold-dim pb-4 mb-8 gap-4">
+            <h2 className="text-gold-muted text-xl md:text-2xl uppercase tracking-executiveWide font-light">
               {activePromptId ? 'Modo Edição' : 'Novo Registro'}
             </h2>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center self-start sm:self-auto">
               {activePromptId && (
                 <button onClick={handleDelete} className="text-gray-500 hover:text-red-500 text-xs uppercase tracking-executiveWide transition-colors">
                   Deletar
                 </button>
               )}
               {activePromptId && (
-                <button onClick={handleCopy} className="btn-gold">
+                <button onClick={handleCopy} className="btn-gold px-4 py-2 sm:px-8 sm:py-3 whitespace-nowrap">
                   {copied ? '[ Copiado! ]' : '[ Copiar Prompt ]'}
                 </button>
               )}
             </div>
           </header>
 
-          <form onSubmit={handleSave} className="flex-1 flex flex-col gap-8">
+          <form onSubmit={handleSave} className="flex-1 flex flex-col gap-6 md:gap-8">
             <div>
               <label className="input-label">Identificador (Título)</label>
               <input 
@@ -142,15 +184,15 @@ export default function App() {
             <div className="flex-1 flex flex-col">
               <label className="input-label">Carga Útil (Conteúdo)</label>
               <textarea 
-                className="input-executive flex-1 min-h-[300px] resize-none"
+                className="input-executive flex-1 min-h-[250px] md:min-h-[300px] resize-none"
                 value={formData.content}
                 onChange={e => setFormData({...formData, content: e.target.value})}
                 required
               />
             </div>
 
-            <div className="flex justify-end pt-4">
-              <button type="submit" className="btn-gold">
+            <div className="flex justify-end pt-4 pb-8 md:pb-0">
+              <button type="submit" className="btn-gold w-full sm:w-auto">
                 [ Salvar no Córtex ]
               </button>
             </div>
