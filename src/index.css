@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-vantablack text-gray-200 font-executive m-0 min-h-screen;
+  }
+}
+
+@layer components {
+  .input-executive {
+    @apply w-full bg-transparent border-b border-gold-dim text-gray-200 font-executive text-base py-2 outline-none transition-all duration-300;
+  }
+
+  .input-executive:focus {
+    @apply border-gold-bright shadow-chiaroscuro-sm;
+  }
+
+  .btn-gold {
+    @apply bg-transparent border border-gold-muted text-gold-muted px-8 py-3 uppercase tracking-executiveWide text-xs cursor-pointer transition-all duration-500 relative overflow-hidden;
+  }
+
+  .btn-gold:hover {
+    @apply bg-gold-muted text-vantablack border-gold-bright shadow-chiaroscuro -translate-y-[1px];
+  }
+
+  .card-prompt {
+    @apply bg-surface border border-gold-dim p-6 mb-4 cursor-pointer transition-all duration-500;
+  }
+
+  .card-prompt:hover {
+    @apply border-gold-muted bg-[#0c0c0c] shadow-glow;
+  }
+}
